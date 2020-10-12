@@ -34,6 +34,7 @@ namespace _1C_TechLogParserLib
         public TransationStatuse TransactionStatus { get; set; }
         public string Context { get; set; }
         public string SQLText { get; set; }
+        public string SDBLText { get; set; }
         public int Rows { get; set; }
         public int RowsAffected { get; set; }
 

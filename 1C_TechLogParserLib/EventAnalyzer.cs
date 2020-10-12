@@ -23,7 +23,10 @@ namespace _1C_TechLogParserLib
             @"((?:(?!(?:,Rows))(?:.|\n))*)," +
             @"(?:Rows=(\d+),)?(?:RowsAffected=(\d+))?";
 
-        private const string sdblPattern = @"Func=Transaction,Func=(RollbackTransaction|CommitTransaction)";
+        private const string sdblTranPattern = @"Func=Transaction,Func=(RollbackTransaction|CommitTransaction)";
+        private const string sdblLongQueryPattern = @"Sdbl=" +
+            @"((?:(?!(?:,Rows))(?:.|\n))*)," +
+            @"(?:Rows=(\d+),)?(?:RowsAffected=(\d+))?";
 
         private const string timeoutPattern = @"WaitConnections=(\d+)";
 
@@ -50,6 +53,7 @@ namespace _1C_TechLogParserLib
             TransationStatuse eventTransStatus = TransationStatuse.Empty;
 
             string eventSQLText = "";
+            string eventSdblText = "";
             int eventRowsAffected = 0;
             int eventRows = 0;
 
@@ -78,14 +82,19 @@ namespace _1C_TechLogParserLib
                     break;
                 case EventType.Transaction:
                     
-                    m = Regex.Match(eventStr, sdblPattern);
+                    m = Regex.Match(eventStr, sdblTranPattern);
                     if (m.Success)
                     {
                         string tStatStr = m.Groups[1].ToString();
                         eventTransStatus = tStatStr == "CommitTransaction" ? TransationStatuse.Commit : TransationStatuse.Rollback;
                     }
-                    else
-                        return null;
+
+                    m = Regex.Match(eventStr, sdblLongQueryPattern);
+                    if (m.Success)
+                    {
+                        eventSdblText = m.Groups[1].ToString();
+                    }
+
                     break;
 
                 case EventType.Query:
@@ -126,6 +135,7 @@ namespace _1C_TechLogParserLib
                 Locks = eventLocks,
                 TransactionStatus = eventTransStatus,
                 SQLText = eventSQLText,
+                SDBLText = eventSdblText,
                 Rows = eventRows,
                 RowsAffected = eventRowsAffected
             };
